@@ -1,8 +1,9 @@
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QSlider, QLabel, QStyle, QSizePolicy, QFileDialog
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QHBoxLayout, QVBoxLayout, QSlider, QLabel, QStyle, QSizePolicy, QFileDialog, QTreeWidget, QTreeWidgetItem, QAbstractItemView
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 from PyQt5.QtMultimediaWidgets import QVideoWidget
 from PyQt5.QtCore import Qt, QUrl
 from PyQt5.QtGui import QPalette
+from PyQt5 import QtCore, QtGui, QtWidgets
 import sys
 
 class Window(QWidget):
@@ -10,7 +11,7 @@ class Window(QWidget):
         super().__init__()
 
         self.setWindowTitle("Interactive Media Player")
-        self.setGeometry(0, 0, 800, 600)
+        self.setGeometry(0, 0, 1024, 720)
         
         self.init_ui()
         
@@ -63,6 +64,30 @@ class Window(QWidget):
         self.media_player.setPosition(position)
 
     
+    def populate_tree_widget(self):
+        for i in range(4):
+            parent_it = QTreeWidgetItem(["{}-{}".format(i, l) for l in range(2)])
+            parent_it.setForeground(0, QtGui.QBrush(QtGui.QColor("#00FF00")))
+            self.tree.addTopLevelItem(parent_it)
+            for j in range(5):
+                it =  QTreeWidgetItem(["{}-{}-{}".format(i, j, l) for l in range(2)])
+                parent_it.addChild(it)
+
+        # item = self.tree.invisibleRootItem()
+        # self.select_item(item)
+        self.tree.expandAll()
+
+    # def select_item(self, item):
+    #     item.setSelected(True)
+    #     for i in range(item.childCount()):
+    #         child = item.child(i)
+    #         self.select_item(child)
+
+    @QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem, int)
+    def onItemClicked(self, it, col):
+        pass
+        # self.set_position(6000)
+    
     def init_ui(self):
         self.media_player = QMediaPlayer(None, QMediaPlayer.VideoSurface)
 
@@ -96,6 +121,14 @@ class Window(QWidget):
         self.label = QLabel()
         self.label.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Maximum)
 
+        # Tree Widget
+        self.tree = QTreeWidget()
+        self.tree.setColumnCount(1)
+        self.populate_tree_widget()
+        self.tree.itemClicked.connect(self.onItemClicked)
+        # self.tree.setMaximumWidth(300)
+    
+
         # Hbox layout
         hboxlayout = QHBoxLayout()
         hboxlayout.setContentsMargins(0, 0, 0, 0)
@@ -111,7 +144,13 @@ class Window(QWidget):
         vboxlayout.addLayout(hboxlayout)
         vboxlayout.addWidget(self.label)
 
-        self.setLayout(vboxlayout)
+        # Root HBox layout
+        hboxrootlayout = QHBoxLayout()
+        hboxrootlayout.addWidget(self.tree, 3)
+        hboxrootlayout.addLayout(vboxlayout, 7)
+        
+
+        self.setLayout(hboxrootlayout)
         self.media_player.setVideoOutput(video_widget)
 
         # Media player signals
